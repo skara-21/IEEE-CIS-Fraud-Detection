@@ -1,68 +1,64 @@
 # Fraud Detection
 
-პროექტის მიზანია საბანკო გადარიცხვების ანალიზით დაადგინოს თაღლითურია თუ არა ესა თუ ის გადახდა.
-გამოყენებულია Sklearn, Feature Engineering, Feature Selection და MLflow მოდელის ტრენინგისთვის, ხოლო Dagshub გამოიყენება როგორც პლატფორმა მოდელების ვერსიირებისა და ლოგირებისათვის.
+The goal of this project is to analyze bank transactions and determine whether a given payment is fraudulent or not.
+The project utilizes Sklearn, Feature Engineering, Feature Selection, and MLflow for model training, while Dagshub is used as a platform for model versioning and logging.
+
 # Fraud Detection Pipeline
 
-ამ პროექტის მთავარი მიზანი იყო **fraud detection pipeline**-ის გამართვა. ეს ფაიფლაინი მოიცავს რამდენიმე მონაცემის დამუშავების ნაბიჯს, მათ შორის: data cleaning, feature engineering, recursive feature selection. საბოლოოდ დამუშავებული
-მონაცემების გამოყენებით იწვრთნება მოდელი და მისი სხვადასხვა metrics ინახება **MLflow**-ს ექსპერიმენტად
+The main objective of this project was to build a **fraud detection pipeline**. This pipeline includes several data processing steps, including: data cleaning, feature engineering, and recursive feature selection. Finally, using the processed data, a model is trained and its various metrics are stored as an **MLflow** experiment.
 
-## პროექტის სტრუქტურა
+## Project Structure
 
-- `model_experiment_{მოდელის არქიტექტურა}.ipynb`  
-  - წინასწარ არსებული Pipeline-ის დახმარებით ხდება train მონაცემების დამუშავება და მოდელის გაწვრთნა
+- `model_experiment_{model_architecture}.ipynb`  
+  - Uses a pre-built Pipeline to process training data and train the model
 
 - `model_inference.ipynb`  
-  - გვაქვს მზა Pipeline, რომელიც ავტომატურად ამუშავებს test მონაცემებს
-  - მანამდე გაწვრთნილი მოდელები ფასდება სხვადასხვა მეტრიკებით და ამ მეტრიკების მიხედვით ვირჩევთ საუკეთესო მოდელს
-  - რომელიც აღმოჩნდა XGBoost 
-  - **შედეგი 0.82512**
+  - Contains a ready-made Pipeline that automatically processes test data
+  - Previously trained models are evaluated using various metrics, and based on these metrics, we select the best model
+  - Which turned out to be XGBoost 
+  - **Result: 0.82512**
 
 - `README.md`  
-  - შეიცავს პროექტის მოკლე მიმოხილვას
-
+  - Contains a brief overview of the project
 
 ## 📁 Dataset
 
-- **წყარო:** [IEEE-CIS Fraud Detection (Kaggle)](https://www.kaggle.com/c/ieee-fraud-detection)
-- მოცემული გვაქვს ორად გაყოფილი მონაცემები:
+- **Source:** [IEEE-CIS Fraud Detection (Kaggle)](https://www.kaggle.com/c/ieee-fraud-detection)
+- The data is split into two parts:
   - `train_transaction.csv`
   - `train_identity.csv`
 
-მათი და-merge-ვა ხდება `TransactionID` სვეტით.
+They are merged using the `TransactionID` column.
 
 ---
 
 ## 🧪 Pipeline Structure
 
-
 ### 1. `DropMissing`
-- **მიზანი:** ამოიღოს ისეთი სვეტები რომელსაც 90% მონაცემების აკლია.
+- **Purpose:** Remove columns that are missing 90% of data.
 - **Custom Transformer**
 
 ### 2. `FillNaN`
-- **მიზანი:**
-  - კატეგორიული მონაცემების NaN მნიშვნელობების `'missing'`-ით შევსება
-  - რიცხვითი მნიშვნელობების **მოდით** შევსება
+- **Purpose:**
+  - Fill NaN values in categorical data with `'missing'`
+  - Fill numerical values with the **mode**
 - **Custom Transformer**
 
 ### 3. `RemoveOutliers`
-- **მიზანი:** Winsorize-ის გამოყენებით რიცხვით მნიშვნელობებს აშორებს **outlier**-ებს
+- **Purpose:** Remove **outliers** from numerical values using Winsorization
 - **Custom Transformer**
 
 ### 4. `BinaryNonBinaryEncoder`
-- **მიზანი:**
-  - კატეგორიული მონაცემები იყოფა ორად Binary (ისეთი სვეტები რომლებსაც ორი უნიკალური მნიშნელობა აქვს) და Non-binary
-  - Binary მონაცემებს უკეთდება One-Hot Encoding
-  - Non-binary მონაცემებს Target Encoding
+- **Purpose:**
+  - Categorical data is split into two types: Binary (columns with two unique values) and Non-binary
+  - Binary data undergoes One-Hot Encoding
+  - Non-binary data undergoes Target Encoding
 - **Custom Transformer**
 
 ### 5. `CorrelationRemover`
-- **მიზანი:** მოაშოროს მაღალი კორელაციის მქონე სვეტების წყვილებიდან ერთ-ერთი (კორელაციის ზღვარი 85%)
+- **Purpose:** Remove one feature from pairs of highly correlated columns (correlation threshold of 85%)
 - **Custom Transformer**
 
 ### 6. `XGBRFE`
-- **მიზანი:** რეკურსიული Feature Selector, რომელიც იყენებს XGBoost regressor-ს და ირჩევს feture-ების **ტოპ 80%**-ს 
+- **Purpose:** Recursive Feature Selector that uses XGBoost regressor and selects the **top 80%** of features
 - **Custom Transformer**
-
-### მინდა აღვნიშნო რომ საკმაოდ რთული დავალება იყო
